@@ -1,0 +1,15 @@
+services:
+  app:
+    environment:
+      OTEL_ENABLED: "false"
+      PYROSCOPE_ENABLED: "false"
+    depends_on: !override
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_started
+    logging: !override
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

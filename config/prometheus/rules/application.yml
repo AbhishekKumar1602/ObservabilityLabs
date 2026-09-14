@@ -1,0 +1,65 @@
+groups:
+- name: application
+  rules:
+  - alert: FastAPITargetDown
+    expr: up{job="fastapi"} == 0
+    for: 2m
+    labels:
+      severity: critical
+      service: fastapi-items
+    annotations:
+      summary: FastAPI cannot be scraped
+      description: Scrapes of {{ $labels.instance }} failed for two minutes. Check liveness, networking and /metrics.
+  - alert: FastAPIHighErrorRate
+    expr: (sum(rate(application_http_requests_total{job="fastapi",status_code=~"5.."}[5m])) / clamp_min(sum(rate(application_http_requests_total{job="fastapi"}[5m])),
+      0.001) > 0.05) and (sum(increase(application_http_requests_total{job="fastapi"}[5m])) >= 50)
+    for: 5m
+    labels:
+      severity: warning
+      service: fastapi-items
+    annotations:
+      summary: FastAPI 5xx ratio exceeds five percent
+      description: At least 50 requests in five minutes and sustained 5xx ratio above 5%. Inspect dependency health,
+        logs and traces.
+  - alert: FastAPIHighLatency
+    expr: (histogram_quantile(0.95, sum by (le) (rate(application_http_request_duration_seconds_bucket{job="fastapi"}[5m])))
+      > 0.75) and (sum(increase(application_http_request_duration_seconds_count{job="fastapi"}[5m])) >= 50)
+    for: 10m
+    labels:
+      severity: warning
+      service: fastapi-items
+    annotations:
+      summary: FastAPI p95 exceeds 750 milliseconds
+      description: Sustained latency at sufficient traffic. Inspect DB operation timing, traces, cache behavior
+        and CPU profiles.
+  - alert: FastAPIExceptionRate
+    expr: sum(rate(application_exceptions_total{job="fastapi"}[5m])) > 0.1
+    for: 5m
+    labels:
+      severity: warning
+      service: fastapi-items
+    annotations:
+      summary: Sustained application exceptions
+      description: More than six database or unexpected exceptions per minute. Inspect sanitized exception frames.
+  - alert: PostgreSQLDependencyDown
+    expr: (application_dependency_up{job="fastapi",dependency="postgres"} == 0) and on(job,instance) (up{job="fastapi"}
+      == 1)
+    for: 1m
+    labels:
+      severity: critical
+      service: fastapi-items
+    annotations:
+      summary: PostgreSQL or schema unavailable to the app
+      description: Application probes fail. Check connectivity, role credentials and Alembic revision; this is application-observed
+        health.
+  - alert: RedisCacheDegraded
+    expr: (application_dependency_up{job="fastapi",dependency="redis"} == 0) and on(job,instance) (up{job="fastapi"}
+      == 1)
+    for: 5m
+    labels:
+      severity: warning
+      service: fastapi-items
+    annotations:
+      summary: Redis cache degraded
+      description: Redis probes fail for five minutes. CRUD can continue via PostgreSQL; inspect DB load and cache
+        errors.

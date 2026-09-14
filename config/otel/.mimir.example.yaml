@@ -1,0 +1,19 @@
+# INACTIVE standalone example for a future NEW OTel metrics source.
+# No Phase 1 service loads this file or requires Mimir.
+# Do not duplicate FastAPI's existing direct Prometheus metric pipeline.
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+processors:
+  batch: {}
+exporters:
+  prometheus_remote_write/mimir:
+    endpoint: http://mimir:9009/api/v1/push
+service:
+  pipelines:
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [prometheus_remote_write/mimir]
