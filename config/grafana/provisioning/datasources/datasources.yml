@@ -1,0 +1,50 @@
+apiVersion: 1
+prune: true
+datasources:
+  - name: Prometheus
+    uid: prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+    jsonData:
+      httpMethod: POST
+      timeInterval: 15s
+  - name: Loki
+    uid: loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    editable: false
+    jsonData:
+      derivedFields:
+        - name: TraceID
+          datasourceUid: tempo
+          matcherRegex: '"trace_id"\s*:\s*"([a-f0-9]{32})"'
+          url: '$${__value.raw}'
+          urlDisplayLabel: View trace
+  - name: Tempo
+    uid: tempo
+    type: tempo
+    access: proxy
+    url: http://tempo:3200
+    editable: false
+    jsonData:
+      tracesToLogsV2:
+        datasourceUid: loki
+        spanStartTimeShift: -1m
+        spanEndTimeShift: 1m
+        tags:
+          - key: service.name
+            value: service_name
+          - key: deployment.environment.name
+            value: deployment_environment_name
+        filterByTraceID: true
+        filterBySpanID: false
+  - name: Pyroscope
+    uid: pyroscope
+    type: grafana-pyroscope-datasource
+    access: proxy
+    url: http://pyroscope:4040
+    editable: false
