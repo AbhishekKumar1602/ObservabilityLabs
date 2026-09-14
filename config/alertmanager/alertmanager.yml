@@ -1,0 +1,21 @@
+global:
+  resolve_timeout: 5m
+templates:
+  - /etc/alertmanager/templates/*.tmpl
+route:
+  receiver: local-ui
+  group_by: [alertname, service]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  routes:
+    - receiver: local-ui
+      matchers: ['severity="critical"']
+      group_wait: 10s
+receivers:
+  # UI/API only; no external messages or credentials required.
+  - name: local-ui
+inhibit_rules:
+  - source_matchers: ['alertname="FastAPITargetDown"']
+    target_matchers: ['alertname=~"FastAPIHighErrorRate|FastAPIHighLatency|FastAPIExceptionRate|PostgreSQLDependencyDown|RedisCacheDegraded"']
+    equal: [service]

@@ -1,0 +1,28 @@
+# Tempo 3 monolithic mode: no Kafka and no generated application metrics.
+target: all
+stream_over_http_enabled: true
+server:
+  http_listen_address: 0.0.0.0
+  http_listen_port: 3200
+  grpc_listen_port: 9095
+  log_level: info
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:4317
+        http:
+          endpoint: 0.0.0.0:4318
+storage:
+  trace:
+    backend: local
+    wal:
+      path: /var/tempo/wal
+    local:
+      path: /var/tempo/blocks
+backend_scheduler:
+  local_work_path: /var/tempo/work
+usage_report:
+  reporting_enabled: false
+# Scheduler/worker retention is set by version-verified flags in Compose.
