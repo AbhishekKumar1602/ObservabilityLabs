@@ -1,0 +1,10 @@
+{{ define "local.title" }}[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }}{{ end }}
+{{ define "local.body" }}
+{{ range .Alerts }}
+Summary: {{ .Annotations.summary }}
+Description: {{ .Annotations.description }}
+Service: {{ .Labels.service }}
+Severity: {{ .Labels.severity }}
+Started: {{ .StartsAt }}
+{{ end }}
+{{ end }}

@@ -1,0 +1,31 @@
+groups:
+- name: platform
+  rules:
+  - alert: CollectorTargetDown
+    expr: up{job="otel-collector"} == 0
+    for: 2m
+    labels:
+      severity: warning
+      service: observability
+    annotations:
+      summary: Collector telemetry endpoint unavailable
+      description: Logs and traces may be delayed or lost. Inspect Collector health, queues, disk and network.
+  - alert: ObservabilityTargetDown
+    expr: up{job=~"loki|tempo|pyroscope|alertmanager|prometheus"} == 0
+    for: 3m
+    labels:
+      severity: warning
+      service: observability
+    annotations:
+      summary: Observability target {{ $labels.job }} unavailable
+      description: Scrapes of {{ $labels.instance }} failed. A failed scrape is not proof ingestion/query APIs failed;
+        inspect the service.
+  - alert: PrometheusConfigReloadFailed
+    expr: prometheus_config_last_reload_successful{job="prometheus"} == 0
+    for: 1m
+    labels:
+      severity: warning
+      service: observability
+    annotations:
+      summary: Prometheus configuration reload failed
+      description: Validate configuration and rules with promtool before retrying reload.
