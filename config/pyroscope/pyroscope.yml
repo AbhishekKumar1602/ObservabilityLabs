@@ -1,0 +1,19 @@
+target: all
+architecture_storage: v2
+server:
+  http_listen_address: 0.0.0.0
+  http_listen_port: 4040
+  grpc_listen_port: 9095
+storage:
+  backend: filesystem
+  filesystem:
+    dir: /data/blocks
+metastore:
+  raft:
+    dir: /data/raft
+  data_dir: /data/metastore
+self_profiling:
+  disable_push: true
+analytics:
+  reporting_enabled: false
+multitenancy_enabled: false
